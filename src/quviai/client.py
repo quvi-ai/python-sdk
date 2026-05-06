@@ -32,6 +32,8 @@ class QuviClient:
         client = QuviClient.login_with_apple(identity_token=token)
     """
 
+    _LOCALHOST_HOSTS = {"localhost", "127.0.0.1", "::1"}
+
     def __init__(
         self,
         *,
@@ -41,11 +43,23 @@ class QuviClient:
         poll_interval: float = 3.0,
         poll_timeout: float = 120.0,
     ) -> None:
+        self._validate_base_url(base_url)
         self._auth = auth
         self._http = HTTPClient(auth=auth, base_url=base_url, timeout=timeout)
         self._poll_interval = poll_interval
         self._poll_timeout = poll_timeout
         self._last_credit: int | None = None  # updated from API responses
+
+    @staticmethod
+    def _validate_base_url(base_url: str) -> None:
+        """Reject plain-HTTP URLs unless targeting localhost (dev/test only)."""
+        import urllib.parse as _up
+        parsed = _up.urlparse(base_url)
+        if parsed.scheme == "http" and parsed.hostname not in QuviClient._LOCALHOST_HOSTS:
+            raise ValueError(
+                f"base_url must use HTTPS for non-local hosts (got {base_url!r}). "
+                "Plain HTTP is only allowed for localhost / 127.0.0.1 / ::1."
+            )
 
     # ------------------------------------------------------------------
     # Auth: class-method constructors
