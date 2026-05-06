@@ -6,7 +6,7 @@ Zero external dependencies — pure Python 3.10+ stdlib.
 ## Installation
 
 ```bash
-pip install quviai-python-sdk
+pip install quviai
 ```
 
 Or directly from source:
