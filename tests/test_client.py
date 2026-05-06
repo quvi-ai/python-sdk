@@ -7,7 +7,7 @@ import json
 import unittest
 from unittest.mock import MagicMock, patch
 
-from quviai import QuviClient, GenerateResult
+from quviai import JWTAuth, QuviClient, GenerateResult
 from quviai.exceptions import AuthError, TaskFailedError, TaskTimeoutError
 
 
@@ -21,12 +21,14 @@ def _b64_png() -> str:
     ).decode()
 
 
-class TestQuviClient(unittest.TestCase):
-    def _client(self) -> QuviClient:
-        return QuviClient(api_key="quvi_test_key")
+def _make_client(**kwargs) -> QuviClient:
+    auth = JWTAuth(access_token="test_access_token", refresh_token="test_refresh_token")
+    return QuviClient(auth=auth, **kwargs)
 
+
+class TestQuviClient(unittest.TestCase):
     @patch("quviai.http.urllib.request.urlopen")
-    def test_submit_image_returns_task_id(self, mock_urlopen):
+    def test_submit_render_3d_returns_task_id(self, mock_urlopen):
         resp = MagicMock()
         resp.read.return_value = json.dumps(
             {"task_id": "abc-123", "status": "queued", "credit": 10, "credit_used": 2}
@@ -35,8 +37,8 @@ class TestQuviClient(unittest.TestCase):
         resp.__exit__ = MagicMock(return_value=False)
         mock_urlopen.return_value = resp
 
-        client = self._client()
-        task_id = client.submit_image(b"fake-png-bytes", h_angle=63, v_angle=29, zoom=5.0)
+        client = _make_client()
+        task_id = client.submit_render_3d(prompt="Modern villa exterior")
         self.assertEqual(task_id, "abc-123")
 
     @patch("quviai.http.urllib.request.urlopen")
@@ -54,7 +56,7 @@ class TestQuviClient(unittest.TestCase):
         resp.__exit__ = MagicMock(return_value=False)
         mock_urlopen.return_value = resp
 
-        client = self._client()
+        client = _make_client()
         result = client.poll_task("abc-123")
         self.assertIsInstance(result, GenerateResult)
         self.assertIsNotNone(result.image_data)
@@ -73,16 +75,14 @@ class TestQuviClient(unittest.TestCase):
         resp.__exit__ = MagicMock(return_value=False)
         mock_urlopen.return_value = resp
 
-        client = self._client()
+        client = _make_client()
         result = client.poll_task("abc-123")
         self.assertEqual(result.url, "https://s3.example.com/result.png")
         self.assertIsNone(result.image_data)
 
-    def test_missing_api_key_raises(self):
-        import os
-        os.environ.pop("QUVI_API_KEY", None)
-        with self.assertRaises(ValueError):
-            QuviClient()
+    def test_missing_auth_raises(self):
+        with self.assertRaises(TypeError):
+            QuviClient()  # auth is required keyword argument
 
     @patch("quviai.http.urllib.request.urlopen")
     def test_failed_task_raises(self, mock_urlopen):
@@ -97,12 +97,12 @@ class TestQuviClient(unittest.TestCase):
         resp.__exit__ = MagicMock(return_value=False)
         mock_urlopen.return_value = resp
 
-        client = self._client()
+        client = _make_client()
         with self.assertRaises(TaskFailedError):
             client.poll_task("abc-123")
 
     def test_timeout_raises(self):
-        client = QuviClient(api_key="quvi_test", poll_timeout=0.001)
+        client = _make_client(poll_timeout=0.001)
 
         with patch("quviai.http.urllib.request.urlopen") as mock_urlopen:
             resp = MagicMock()
