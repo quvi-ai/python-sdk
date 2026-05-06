@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "quviai-python-sdk"
+name = "quviai"
 version = "0.1.0"
 description = "Official Python SDK for the QUVIAI AI rendering API"
 readme = "README.md"
