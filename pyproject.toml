@@ -9,7 +9,7 @@ description = "Official Python SDK for the QUVIAI AI rendering API"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
-authors = [{ name = "QUVIAI", email = "enesonurbayram@outlook.com" }]
+authors = [{ name = "QUVIAI", email = "support@quvi.ai" }]
 keywords = ["quviai", "ai", "image-generation", "rendering", "sdk"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -28,6 +28,7 @@ dependencies = []  # zero external dependencies — pure Python stdlib
 Homepage = "https://quvi.ai"
 Repository = "https://github.com/quvi-ai/python-sdk"
 "Bug Tracker" = "https://github.com/quvi-ai/python-sdk/issues"
+Security = "https://github.com/quvi-ai/python-sdk/security/policy"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/quviai"]
